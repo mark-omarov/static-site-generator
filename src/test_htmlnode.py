@@ -70,7 +70,7 @@ class TestTextNodeToHTMLNode(unittest.TestCase):
     def test_text_node_to_html_node(self):
         with self.assertRaises(Exception):
             text_node_to_html_node(TextNode("Hello, World!", "unknown"))
-        html_node = text_node_to_html_node(TextNode("Hello, World!", TextType.NORMAL))
+        html_node = text_node_to_html_node(TextNode("Hello, World!", TextType.TEXT))
         self.assertEqual(repr(html_node), repr(LeafNode(None, "Hello, World!")))
         html_node = text_node_to_html_node(TextNode("Hello, World!", TextType.BOLD))
         self.assertEqual(repr(html_node), repr(LeafNode("b", "Hello, World!")))
