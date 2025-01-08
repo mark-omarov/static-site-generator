@@ -102,3 +102,17 @@ def markdown_to_blocks(text):
             filter(lambda x: len(x) > 0, text.split("\n\n")),
         )
     )
+
+
+def block_to_block_type(block):
+    if re.match(r"#+ ", block):
+        return "header"
+    if block.startswith("```") and block.endswith("```"):
+        return "code"
+    if all(line.startswith(">") for line in block.split("\n")):
+        return "quote"
+    if all(line.startswith(("* ", "- ")) for line in block.split("\n")):
+        return "unordered_list"
+    if all(line.startswith(f"{i + 1}. ") for i, line in enumerate(block.split("\n"))):
+        return "ordered_list"
+    return "paragraph"

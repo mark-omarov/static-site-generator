@@ -7,6 +7,7 @@ from inline_markdown import (
     split_nodes_link,
     text_to_textnodes,
     markdown_to_blocks,
+    block_to_block_type,
 )
 
 from textnode import TextNode, TextType
@@ -213,6 +214,51 @@ class TestInlineMarkdown(unittest.TestCase):
                 "\n\n".join(["Should remove excessive lines\n", "And strip", ""])
             ),
             ["Should remove excessive lines", "And strip"],
+        )
+
+    def test_block_to_block_type(self):
+        self.assertEqual(block_to_block_type("# Heading 1"), "header")
+        self.assertEqual(block_to_block_type("## Heading 2"), "header")
+        self.assertEqual(block_to_block_type("### Heading 3"), "header")
+        self.assertEqual(block_to_block_type("#### Heading 4"), "header")
+
+        self.assertEqual(block_to_block_type("```\ncode block\n```"), "code")
+        self.assertEqual(block_to_block_type("```python\nx = 1\n```"), "code")
+        self.assertEqual(block_to_block_type("```\nmulti\nline\ncode\n```"), "code")
+
+        self.assertEqual(block_to_block_type("> Single line quote"), "quote")
+        self.assertEqual(block_to_block_type("> First line\n> Second line"), "quote")
+        self.assertEqual(block_to_block_type("> Multi\n> Line\n> Quote"), "quote")
+
+        self.assertEqual(block_to_block_type("* Single item"), "unordered_list")
+        self.assertEqual(
+            block_to_block_type("* First item\n* Second item"), "unordered_list"
+        )
+        self.assertEqual(
+            block_to_block_type("- First item\n- Second item"), "unordered_list"
+        )
+        self.assertEqual(
+            block_to_block_type("* Item 1\n* Item 2\n* Item 3"), "unordered_list"
+        )
+
+        self.assertEqual(block_to_block_type("1. First item"), "ordered_list")
+        self.assertEqual(
+            block_to_block_type("1. First item\n2. Second item"), "ordered_list"
+        )
+        self.assertEqual(
+            block_to_block_type("1. One\n2. Two\n3. Three"), "ordered_list"
+        )
+
+        self.assertEqual(block_to_block_type("Regular paragraph text"), "paragraph")
+        self.assertEqual(block_to_block_type("Multi\nline\nparagraph"), "paragraph")
+        self.assertEqual(
+            block_to_block_type("Text with **bold** and *italic*"), "paragraph"
+        )
+
+        self.assertEqual(block_to_block_type("#Invalid header"), "paragraph")
+        self.assertEqual(block_to_block_type("```unclosed code block"), "paragraph")
+        self.assertEqual(
+            block_to_block_type("1. Wrong\n3. Number\n2. Order"), "paragraph"
         )
 
 
