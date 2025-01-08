@@ -8,6 +8,7 @@ from inline_markdown import (
     text_to_textnodes,
     markdown_to_blocks,
     block_to_block_type,
+    markdown_to_html,
 )
 
 from textnode import TextNode, TextType
@@ -259,6 +260,28 @@ class TestInlineMarkdown(unittest.TestCase):
         self.assertEqual(block_to_block_type("```unclosed code block"), "paragraph")
         self.assertEqual(
             block_to_block_type("1. Wrong\n3. Number\n2. Order"), "paragraph"
+        )
+
+    def test_markdown_to_html(self):
+        markdown = """
+# Header
+
+Paragraph
+
+- list item
+- list item
+
+[link](http://somewhere.com)
+
+![image](http://somewhere.com)
+
+__italics__
+
+**bold**
+        """
+        self.assertEqual(
+            markdown_to_html(markdown).to_html(),
+            '<div><h1>Header</h1><p>Paragraph</p><ul><li>list item</li><li>list item</li></ul><p><a href="http://somewhere.com">link</a></p><p><img src="http://somewhere.com" alt="image">image</img></p><p>__italics__</p><p><b>bold</b></p></div>',
         )
 
 

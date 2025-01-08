@@ -1,5 +1,6 @@
 import re
 from textnode import TextNode, TextType
+from htmlnode import ParentNode, LeafNode
 
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
@@ -116,3 +117,65 @@ def block_to_block_type(block):
     if all(line.startswith(f"{i + 1}. ") for i, line in enumerate(block.split("\n"))):
         return "ordered_list"
     return "paragraph"
+
+
+def text_to_children(text):
+    nodes = text_to_textnodes(text)
+    children = []
+    for node in nodes:
+        if node.text_type == TextType.TEXT:
+            children.append(LeafNode(None, node.text))
+        elif node.text_type == TextType.BOLD:
+            children.append(LeafNode("b", node.text))
+        elif node.text_type == TextType.ITALIC:
+            children.append(LeafNode("i", node.text))
+        elif node.text_type == TextType.CODE:
+            children.append(LeafNode("code", node.text))
+        elif node.text_type == TextType.LINK:
+            children.append(LeafNode("a", node.text, {"href": node.url}))
+        elif node.text_type == TextType.IMAGE:
+            children.append(
+                LeafNode("img", node.text, {"src": node.url, "alt": node.text})
+            )
+    return children
+
+
+def markdown_to_html(markdown):
+    blocks = markdown_to_blocks(markdown)
+    children = []
+
+    for block in blocks:
+        block_type = block_to_block_type(block)
+
+        if block_type == "paragraph":
+            children.append(ParentNode("p", text_to_children(block)))
+
+        elif block_type == "header":
+            level = len(block.split(" ")[0])  # Count #'s
+            header_text = block[level + 1 :]  # Skip #'s and space
+            children.append(ParentNode(f"h{level}", text_to_children(header_text)))
+
+        elif block_type == "code":
+            code_text = block.strip("```").strip()
+            code_node = ParentNode("code", text_to_children(code_text))
+            children.append(ParentNode("pre", [code_node]))
+
+        elif block_type == "quote":
+            quote_text = "\n".join(line[2:] for line in block.split("\n"))
+            children.append(ParentNode("blockquote", text_to_children(quote_text)))
+
+        elif block_type == "unordered_list":
+            items = []
+            for line in block.split("\n"):
+                item_text = line[2:]  # Remove "* " or "- "
+                items.append(ParentNode("li", text_to_children(item_text)))
+            children.append(ParentNode("ul", items))
+
+        elif block_type == "ordered_list":
+            items = []
+            for line in block.split("\n"):
+                item_text = line[line.find(" ") + 1 :]  # Remove "1. ", "2. ", etc
+                items.append(ParentNode("li", text_to_children(item_text)))
+            children.append(ParentNode("ol", items))
+
+    return ParentNode("div", children)
